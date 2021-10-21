@@ -1,28 +1,53 @@
-"""
-
 import pyodbc
+import requests
 
-server = 'tcp:myserver.database.windows.net'
-database = 'mydb'
-username = 'myusername'
-password = 'mypassword'
-connection = pyodbc.connect(
-    'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-cursor = connection.cursor()
+SERVER = '10.0.0.50'
+DATABASE = 'QSELECAO'
+USERNAME = 'stevillis'
+PASSWORD = '123456@@'
 
 
-cursor.execute(
-    '''
-    CREATE TABLE test (
-        id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
-        nome VARCHAR(200) NOT NULL,
-        pdf VARBINARY(max) NOT NULL
-    );
-    '''
-)
+def download_pdf(url):
+    response = requests.get(url)
+    print(pyodbc.Binary(response.content))
 
-connection.commit()
-"""
+
+def insert_row():
+    connection = pyodbc.connect(
+        'DRIVER={SQL Server};SERVER=' + SERVER + ';DATABASE=' + DATABASE + ';UID=' + USERNAME + ';PWD=' + PASSWORD)
+    cursor = connection.cursor()
+
+    params = (
+        1,  # cod_conteudo
+        1,  # tipo_conteudo
+        'teste1',  # nome_arquivo
+        'to aqui',  # conteudo_binario
+        1,  # compactado
+    )
+
+    cursor.execute(
+        '''
+        BEGIN
+            IF NOT EXISTS (
+                SELECT COD_CONTEUDO_BINARIO FROM [dbo].[FW_CONTEUDOS_BINARIOS]
+                WHERE COD_CONTEUDO_BINARIO=?
+            )
+            BEGIN
+            INSERT INTO [dbo].[FW_CONTEUDOS_BINARIOS]
+            (TIPO_CONTEUDO_BINARIO, COD_CONTEUDO_BINARIO, NOME_ARQUIVO, CONTEUDO_BINARIO, COMPACTADO)
+            VALUES
+            (?, ?, ?, ?, ?)
+            END
+        END
+    ''',
+        params
+    )
+
+    connection.commit()
+    connection.close()
+
+
+download_pdf('http://www.africau.edu/images/default/sample.pdf')
 
 """
 cursor.execute(
@@ -34,16 +59,16 @@ cursor.execute(
 )
 """
 
-file = 'C:\\Users\\2019201410840742\\Documents\\dummy.pdf'
+# file = 'C:\\Users\\2019201410840742\\Documents\\dummy.pdf'
 # insert = 'INSERT INTO test (nome, pdf) values (?, ?)'
 
-with open(file, 'rb') as f:
-    bindata = f.read()
+# with open(file, 'rb') as f:
+#    bindata = f.read()
 
-print(bindata)
+# print(bindata)
 
 # binparams = (file, pyodbc.Binary(bindata))
 
-# connection.cursor().execute(insert, binparams)
-# connection.commit()
-# connection.close()
+# CONNECTION.cursor().execute(insert, binparams)
+# CONNECTION.commit()
+# CONNECTION.close()
