@@ -4,12 +4,10 @@ import requests
 
 
 def get_connection():
-    # SERVER = '10.0.0.50'
+    #server = '10.0.0.50'
     server = 'localhost\\SQLEXPRESS'
     database = 'QSELECAO_BINARIOS'
-    # USERNAME = 'stevillis'
-    username = 'sa'
-    # PASSWORD = '123456@@'
+    username = 'stevillis'
     password = '123456'
 
     connection = pyodbc.connect(
@@ -40,16 +38,18 @@ def get_file_name(path, with_extension=False):
     return path[firstpos + 1:lastpos]
 
 
-def read_excel(file_path):
-    df = pd.read_excel(file_path, index_col=None, header=None)
-    inscricoes = df[2]
-    documentos = df[3]
+def read_excel(file):
+    df = pd.read_excel(file, index_col=None, header=None)
 
-    for i in range(len(df)):
-        inscricao = inscricoes[i]
-        documento = documentos[i]
+    inscricoes = df[1]
+    documentos = df[2]
 
-        insert_database_row(inscricao, documento)
+    for count, i in enumerate(range(len(df))):
+        if count > 0:
+            inscricao = int(inscricoes[i])
+            documento = documentos[i]
+
+            insert_database_row(inscricao, documento)
 
 
 def insert_database_row(inscricao, path_arquivo):
@@ -61,15 +61,13 @@ def insert_database_row(inscricao, path_arquivo):
 
     params = (
         inscricao,  # existing COD_CONTEUDO_BINARIO
-        inscricao,  # cod_conteudo
         8,  # tipo_conteudo
+        inscricao,  # cod_conteudo
         nome_arquivo,  # nome_arquivo
         bindata,  # conteudo_binario
         0,  # compactado
     )
 
-    print(params)
-    """
     connection = get_connection()
     cursor = get_cursor(connection)
 
@@ -93,7 +91,6 @@ def insert_database_row(inscricao, path_arquivo):
         print(ie)
     finally:
         connection.close()
-    """
 
 
 def read_database_row():
