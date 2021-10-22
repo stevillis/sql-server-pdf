@@ -1,10 +1,30 @@
+import pandas as pd
 import pyodbc
 import requests
 
-SERVER = '10.0.0.50'
-DATABASE = 'QSELECAO'
-USERNAME = 'stevillis'
-PASSWORD = '123456@@'
+"""
+for row in cursor.fetchall():
+    print(row)
+"""
+
+
+def get_connection():
+    # SERVER = '10.0.0.50'
+    server = 'localhost\\SQLEXPRESS'
+    database = 'QSELECAO_BINARIOS'
+    # USERNAME = 'stevillis'
+    username = 'sa'
+    # PASSWORD = '123456@@'
+    password = '123456'
+
+    connection = pyodbc.connect(
+        'DRIVER={SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+    return connection
+
+
+def get_cursor(connection):
+    cursor = connection.cursor()
+    return cursor
 
 
 def download_pdf(url):
@@ -12,63 +32,58 @@ def download_pdf(url):
     print(pyodbc.Binary(response.content))
 
 
+def read_excel(file_path):
+    df = pd.read_excel(file_path, index_col=None, header=None)
+    print(df['Nome'])
+
+
 def insert_row():
-    connection = pyodbc.connect(
-        'DRIVER={SQL Server};SERVER=' + SERVER + ';DATABASE=' + DATABASE + ';UID=' + USERNAME + ';PWD=' + PASSWORD)
-    cursor = connection.cursor()
+    file_name = 'sample.pdf'
+    file = '' + file_name
+
+    with open(file, 'rb') as f:
+        bindata = f.read()
 
     params = (
-        1,  # cod_conteudo
+        2,  # existing COD_CONTEUDO_BINARIO
+        2,  # cod_conteudo
         1,  # tipo_conteudo
-        'teste1',  # nome_arquivo
-        'to aqui',  # conteudo_binario
+        file_name,  # nome_arquivo
+        bindata,  # conteudo_binario
         1,  # compactado
     )
 
-    cursor.execute(
-        '''
-        BEGIN
-            IF NOT EXISTS (
-                SELECT COD_CONTEUDO_BINARIO FROM [dbo].[FW_CONTEUDOS_BINARIOS]
-                WHERE COD_CONTEUDO_BINARIO=?
-            )
+    connection = get_connection()
+    cursor = get_cursor(connection)
+
+    try:
+        cursor.execute('''
             BEGIN
-            INSERT INTO [dbo].[FW_CONTEUDOS_BINARIOS]
-            (TIPO_CONTEUDO_BINARIO, COD_CONTEUDO_BINARIO, NOME_ARQUIVO, CONTEUDO_BINARIO, COMPACTADO)
-            VALUES
-            (?, ?, ?, ?, ?)
-            END
-        END
-    ''',
-        params
-    )
+                IF NOT EXISTS (
+                    SELECT COD_CONTEUDO_BINARIO FROM [dbo].[FW_CONTEUDOS_BINARIOS]
+                    WHERE COD_CONTEUDO_BINARIO=?
+                )
+                BEGIN
+                INSERT INTO [dbo].[FW_CONTEUDOS_BINARIOS]
+                (TIPO_CONTEUDO_BINARIO, COD_CONTEUDO_BINARIO, NOME_ARQUIVO, CONTEUDO_BINARIO, COMPACTADO)
+                VALUES
+                (?, ?, ?, ?, ?)
+                END
+            END''', params)
 
-    connection.commit()
-    connection.close()
+        connection.commit()
+    except pyodbc.IntegrityError as ie:
+        print(ie)
+    finally:
+        connection.close()
 
 
-download_pdf('http://www.africau.edu/images/default/sample.pdf')
+def read_row():
+    pass
 
-"""
-cursor.execute(
-    '''
-    INSERT INTO test 
-    (pdf)
-    (SELECT * FROM OPENROWSET(BULK 'C:\\Users\\2019201410840742\\Documents\\dummy.pdf', SINGLE_BLOB) AS BLOB;
-    '''
-)
-"""
 
-# file = 'C:\\Users\\2019201410840742\\Documents\\dummy.pdf'
-# insert = 'INSERT INTO test (nome, pdf) values (?, ?)'
+read_excel('candidatos.xlsx')
+# insert_row()
 
-# with open(file, 'rb') as f:
-#    bindata = f.read()
 
-# print(bindata)
-
-# binparams = (file, pyodbc.Binary(bindata))
-
-# CONNECTION.cursor().execute(insert, binparams)
-# CONNECTION.commit()
-# CONNECTION.close()
+# download_pdf('http://www.africau.edu/images/default/sample.pdf')
