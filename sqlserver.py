@@ -2,11 +2,6 @@ import pandas as pd
 import pyodbc
 import requests
 
-"""
-for row in cursor.fetchall():
-    print(row)
-"""
-
 
 def get_connection():
     # SERVER = '10.0.0.50'
@@ -29,30 +24,52 @@ def get_cursor(connection):
 
 def download_pdf(url):
     response = requests.get(url)
-    print(pyodbc.Binary(response.content))
+    return pyodbc.Binary(response.content)
+
+
+def get_file_extension(path):
+    return path.split('.')[-1]
+
+
+def get_file_name(path, with_extension=False):
+    firstpos = path.rfind("\\")
+    if with_extension:
+        lastpos = len(path)
+    else:
+        lastpos = path.rfind(".")
+    return path[firstpos + 1:lastpos]
 
 
 def read_excel(file_path):
     df = pd.read_excel(file_path, index_col=None, header=None)
-    print(df['Nome'])
+    inscricoes = df[2]
+    documentos = df[3]
+
+    for i in range(len(df)):
+        inscricao = inscricoes[i]
+        documento = documentos[i]
+
+        insert_database_row(inscricao, documento)
 
 
-def insert_row():
-    file_name = 'sample.pdf'
-    file = '' + file_name
+def insert_database_row(inscricao, path_arquivo):
+    nome_arquivo = str(inscricao) + '.' + get_file_extension(path_arquivo)
 
-    with open(file, 'rb') as f:
-        bindata = f.read()
+    # with open(path_arquivo, 'rb') as f:
+    #    bindata = f.read()
+    bindata = download_pdf(path_arquivo)
 
     params = (
-        2,  # existing COD_CONTEUDO_BINARIO
-        2,  # cod_conteudo
-        1,  # tipo_conteudo
-        file_name,  # nome_arquivo
+        inscricao,  # existing COD_CONTEUDO_BINARIO
+        inscricao,  # cod_conteudo
+        8,  # tipo_conteudo
+        nome_arquivo,  # nome_arquivo
         bindata,  # conteudo_binario
-        1,  # compactado
+        0,  # compactado
     )
 
+    print(params)
+    """
     connection = get_connection()
     cursor = get_cursor(connection)
 
@@ -76,14 +93,13 @@ def insert_row():
         print(ie)
     finally:
         connection.close()
+    """
 
 
-def read_row():
+def read_database_row():
     pass
 
 
 read_excel('candidatos.xlsx')
-# insert_row()
-
 
 # download_pdf('http://www.africau.edu/images/default/sample.pdf')
