@@ -143,4 +143,4 @@ cython_debug/
 # PDF
 *.pdf
 
-sqlite3.db
+test/sqlite3.db

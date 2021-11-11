@@ -41,7 +41,7 @@ def read_BLOB():
 
         cursor.execute('SELECT pdf FROM test WHERE id=1;')
         pdf = cursor.fetchone()[0]
-        with open('result.pdf', 'wb') as file:
+        with open('../result.pdf', 'wb') as file:
             file.write(pdf)
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
