@@ -46,8 +46,6 @@ def insert_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario
         compactado,  # COMPACTADO
     )
 
-    print(params)
-    exit(-1)
     connection = get_connection()
     cursor = get_cursor(connection)
 

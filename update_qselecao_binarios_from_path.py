@@ -45,7 +45,7 @@ def read_directory():
 
 
 def log_erro(inscricao):
-    with open('log_erro.txt', 'a') as file:
+    with open('log_update.txt', 'a') as file:
         file.write(inscricao + '\n')
 
 
