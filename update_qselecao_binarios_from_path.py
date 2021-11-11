@@ -32,7 +32,6 @@ def update_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario
         tipo_conteudo,  # TIPO_CONTEUDO_BINARIO
         inscricao,  # COD_CONTEUDO_BINARIO
     )
-    print(params)
 
     connection = get_connection()
     cursor = get_cursor(connection)
