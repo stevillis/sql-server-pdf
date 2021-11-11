@@ -1,5 +1,6 @@
 from os import listdir
 
+import pandas as pd
 import pyodbc
 
 
@@ -57,6 +58,7 @@ def update_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario
         tipo_conteudo,  # TIPO_CONTEUDO_BINARIO
         inscricao,  # COD_CONTEUDO_BINARIO
     )
+    print(params)
 
     connection = get_connection()
     cursor = get_cursor(connection)
@@ -92,32 +94,39 @@ def update_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario
         return success
 
 
-def update_pdfs():
-    path_pdfs = read_directory()
-    pdf_list = listdir(path_pdfs)
+def get_file_name_from_path(path, with_extension=False):
+    firstpos = path.rfind("\\")
+    if with_extension:
+        lastpos = len(path)
+    else:
+        lastpos = path.rfind(".")
+    return path[firstpos + 1:lastpos]
 
-    files_located = len(pdf_list)
-    pdfs_located = [file for file in pdf_list if get_file_extension(file) == 'pdf']
-    print('Quantidade de Arquivos no Diretório: ' + str(files_located))
-    print('Quantidade de PDFs no Diretório: ' + str(len(pdfs_located)))
-    print('-' * 40, '\n')
 
-    updated_files = 0
-    for pdf in pdfs_located:
-        inscricao = get_file_name(pdf)
-        file_path = path_pdfs + pdf
-        with open(file_path, 'rb') as pdf_content:
-            # bindata = pyodbc.Binary(pdf_content.read())
-            bindata = pdf_content.read()
+def update_pdfs(planilha, diretorio_pdfs):
+    df = pd.read_excel(planilha, index_col=None, header=None)
 
-            print(f'Atualizando Inscrição: {inscricao}')
-            nome_arquivo = pdf.split('_')[0] + '.pdf'
-            success = update_database_row(inscricao=inscricao, nome_arquivo=nome_arquivo, tipo_conteudo=8,
-                                          conteudo_binario=bindata)
-            if success:
-                updated_files += 1
-                print(f'Arquivos atualizados: {updated_files} de {pdfs_located}\n', )
+    inscricoes = df[2]
+    codigos = df[3]
+
+    for count, i in enumerate(range(len(df))):
+        if count > 0:
+            inscricao = int(inscricoes[i])
+            codigo = str(codigos[i])
+
+            with open(diretorio_pdfs + codigo + '_1.pdf', 'rb') as pdf_content:
+                bindata = pyodbc.Binary(pdf_content.read())
+                # bindata = pdf_content.read()
+
+                print(f'Atualizando Inscrição: {inscricao}')
+                nome_arquivo = str(inscricao) + '.pdf'
+                success = update_database_row(inscricao=inscricao, nome_arquivo=nome_arquivo, tipo_conteudo=8,
+                                              conteudo_binario=bindata)
+                if success:
+                    print(f'Arquivos atualizados: {count}')
 
 
 if __name__ == '__main__':
-    update_pdfs()
+    planilha = 'C:\\Users\\2019201410840742\\Documents\\project\\candidatos2.xlsx'
+    diretorio_pdfs = 'C:\\Users\\2019201410840742\\Documents\\project\\pdfs\\'
+    update_pdfs(planilha=planilha, diretorio_pdfs=diretorio_pdfs)
