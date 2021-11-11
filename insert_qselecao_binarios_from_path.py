@@ -1,7 +1,6 @@
 from os import listdir
 
 import pyodbc
-import requests
 
 
 def get_connection():
