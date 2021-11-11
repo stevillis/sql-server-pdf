@@ -1,5 +1,3 @@
-from os import listdir
-
 import pandas as pd
 import pyodbc
 
@@ -19,30 +17,6 @@ def get_connection():
 def get_cursor(connection):
     cursor = connection.cursor()
     return cursor
-
-
-def add_backslash(path):
-    new_path = path
-    if len(new_path) > 0:
-        if new_path[-1] != '\\':
-            new_path += '\\'
-    return new_path
-
-
-def get_file_extension(path):
-    return path.split('.')[-1]
-
-
-def get_file_name(file):
-    if file.find('_') > -1:
-        return file.split('_')[0]
-    return file.split('.')[0]
-
-
-def read_directory():
-    path_pdfs = input('Caminho dos Arquivos PDFs: ')
-    path_pdfs = add_backslash(path_pdfs)
-    return path_pdfs
 
 
 def log_erro(inscricao):
@@ -92,15 +66,6 @@ def update_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario
     finally:
         connection.close()
         return success
-
-
-def get_file_name_from_path(path, with_extension=False):
-    firstpos = path.rfind("\\")
-    if with_extension:
-        lastpos = len(path)
-    else:
-        lastpos = path.rfind(".")
-    return path[firstpos + 1:lastpos]
 
 
 def update_pdfs(planilha, diretorio_pdfs):
