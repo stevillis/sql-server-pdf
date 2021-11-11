@@ -49,10 +49,11 @@ def log_erro(inscricao):
         file.write(inscricao + '\n')
 
 
-def update_database_row(inscricao, tipo_conteudo, conteudo_binario):
+def update_database_row(inscricao, nome_arquivo, tipo_conteudo, conteudo_binario):
     params = (
         inscricao,  # existing COD_CONTEUDO_BINARIO
         conteudo_binario,  # CONTEUDO_BINARIO
+        nome_arquivo,  # NOME_ARQUIVO
         tipo_conteudo,  # TIPO_CONTEUDO_BINARIO
         inscricao,  # COD_CONTEUDO_BINARIO
     )
@@ -70,7 +71,8 @@ def update_database_row(inscricao, tipo_conteudo, conteudo_binario):
                 )
                 BEGIN
                 UPDATE [dbo].[FW_CONTEUDOS_BINARIOS]
-                SET CONTEUDO_BINARIO = ?
+                SET CONTEUDO_BINARIO = ?,
+                    NOME_ARQUIVO = ?
                 WHERE TIPO_CONTEUDO_BINARIO = ?
                     AND COD_CONTEUDO_BINARIO = ?
                 END
@@ -109,7 +111,9 @@ def update_pdfs():
             bindata = pdf_content.read()
 
             print(f'Atualizando Inscrição: {inscricao}')
-            success = update_database_row(inscricao=inscricao, tipo_conteudo=8, conteudo_binario=bindata)
+            nome_arquivo = pdf.split('_')[0] + '.pdf'
+            success = update_database_row(inscricao=inscricao, nome_arquivo=nome_arquivo, tipo_conteudo=8,
+                                          conteudo_binario=bindata)
             if success:
                 updated_files += 1
                 print(f'Arquivos atualizados: {updated_files} de {pdfs_located}\n', )
